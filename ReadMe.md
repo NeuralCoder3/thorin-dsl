@@ -35,6 +35,8 @@ Disadvantage:
 ## ABI
 
 We could just write Thorin programs, compile them, and then interface with them via the C interface.
+It is easy (and common) to call c functions from python. 
+We can also let the inner c function call python functions. This can be handled using a callback function, a deep python embedding, or using communication.
 
 Advantage:
 * No need to write a compiler

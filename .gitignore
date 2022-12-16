@@ -1,0 +1,8 @@
+thorin/thorin
+*.so
+*.ll
+*.out
+*.o
+*.tmp
+tmp.*
+T.*
