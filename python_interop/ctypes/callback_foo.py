@@ -9,9 +9,6 @@ def bar(x):
 bar_type = CFUNCTYPE(c_int, c_int)
 bar_callback = bar_type(bar)
 
-print(bar_type)
-print(bar_type.__name__)
-
 
 @CFUNCTYPE(c_int, c_int)
 def bar2(x):
