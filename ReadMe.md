@@ -10,7 +10,82 @@ Additionally, the compilation would be quite slow.
 
 Therefore, we want to embed/interface with other languages.
 
-## High-Level
+## Examples
+
+We show an example how the user experience in Python could look like.
+
+### String FFI
+
+This part is already implemented.
+
+```python
+
+def bar(x):
+    return x + 35
+
+```
+```python
+code = """
+```
+```rust
+[...] // omitted for brevity
+
+// could also be automatically generated
+.con bar [mem: %mem.M, a: I32, return : .Cn [%mem.M, I32]];
+
+.con .extern foo [mem: %mem.M, a: I32, return : .Cn [%mem.M, I32]] = {
+    .let b = %core.wrap.add _32 0 (a, 2:I32);
+    bar (mem, b, return)
+};
+```
+```python
+"""
+```
+```python
+
+thorin_interface = thorin(
+    code, 
+    [(bar, c_int, [c_int])] # could also be automatically generated
+  )
+
+# run the code
+print(thorin_interface.foo(5)) # 42
+```
+
+### Framework
+
+The framework is a (partly) reimplementation of `Def` with
+additional quoting and unquoting features.
+It makes heavy use of runtime types and overloading.
+Additionally, combinators are provided to ease the creation of control flow.
+
+There has to be a balance to not make the framework too complex
+and keep the user from thinking general python code could be reified.
+
+```python
+
+def bar(x):
+    return x + 35
+
+def thorin_foo():
+    # overloading for quoting unquoting
+    thorin_bar = thorin(bar) # this call is resolved to thorin_wrap(bar)
+    foo = function(int, [int])
+    a = foo.arg(0)
+    foo.return = thorin_bar(a + 2)
+    # alternatively using more reflection (needs inversion/reflection of lambda terms)
+    # foo = thorin(lambda a: thorin_bar(a + 2))
+    return foo
+
+foo = thorin(thorin_foo()) # resolved to thorin_execute(thorin_foo())
+print(foo(5))
+```
+
+## Concepts
+
+We will present multiple non-exclusive approaches to implement a DSL.
+
+### High-Level
 
 The low-level interface can be solved by creating a high-level language that compiles down to Thorin.
 Thorin acts as an intermediate representation for the high-level language.
@@ -32,7 +107,7 @@ Disadvantage:
 * Compilers are tedious to write
 * Compilation time issue
 
-## ABI
+### ABI/FFI
 
 We could just write Thorin programs, compile them, and then interface with them via the C interface.
 It is easy (and common) to call c functions from python. 
@@ -45,7 +120,18 @@ Advantage:
 Disadvantage:
 * Low-level code
 
-## Transpiler
+Tools:
+* Ctypes
+* [cffi](https://cffi.readthedocs.io/en/latest/overview.html)
+* [MessagePack](https://msgpack.org/)
+  * analog to [call-haskell-from-anything](https://github.com/nh2/call-haskell-from-anything) (communication wrapper on top of c ffi)
+
+### Communication
+
+Similar to the ABI/FFI approach, but we actively communicate (e.g. using named pipes)
+between both programs.
+
+### Transpiler
 
 We could transpile high-level code to Thorin code and use the binary interface approach.
 We would need a good way to handle bidirectional communication between the high-level language and Thorin.

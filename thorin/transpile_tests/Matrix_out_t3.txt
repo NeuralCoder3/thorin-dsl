@@ -1,0 +1,89 @@
+.con .extern multiply_matrices [mem: %mem.M, A: %mem.Ptr (%mem.Ptr (I32, 0:.Nat), 0:.Nat), B: %mem.Ptr (%mem.Ptr (I32, 0:.Nat), 0:.Nat), return: .Cn [%mem.M, %mem.Ptr (%mem.Ptr (I32, 0:.Nat), 0:.Nat)]] = {
+    .con ret_cont r::[%mem.Ptr (%mem.Ptr (I32, 0:.Nat), 0:.Nat)] = return (mem, r);
+    .con rows_A_cont [r:.Nat] = {
+        .let rows_A = r;
+        %mem.load (I32, 0:.Nat) (mem, A) rows_A_cont_1
+    };
+    .con rows_A_cont_1 [r:I32] = {
+        .let rows_A = r;
+        %mem.load (I32, 0:.Nat) (mem, %mem.lea (1:.Nat, [I32], 0:.Nat) (A, 0:.Idx 1)) rows_A_cont_2
+    };
+    .con rows_A_cont_2 [r:I32] = {
+        .let cols_A = r;
+        %mem.load (I32, 0:.Nat) (mem, B) rows_B_cont
+    };
+    .con rows_B_cont [r:.Nat] = {
+        .let rows_B = r;
+        %mem.load (I32, 0:.Nat) (mem, %mem.lea (1:.Nat, [I32], 0:.Nat) (B, 0:.Idx 1)) rows_B_cont_1
+    };
+    .con rows_B_cont_1 [r:I32] = {
+        .let cols_B = r;
+        %mem.alloc (I32, 0:.Nat) (mem) result_cont
+    };
+    .con result_cont [r:%mem.Ptr (I32, 0:.Nat)] = {
+        .let result_row_ptr = r;
+        .let result = %mem.slot (I32, 0:.Nat) (mem, 0:.Nat) result_cont_1
+    };
+    .con result_cont_1 [r:%mem.Ptr (I32, 0:.Nat)] = {
+        .let result_row_ptr_2 = r;
+        %mem.store (I32, 0:.Nat) (mem, result_row_ptr_2, 0:I32) result_cont_2
+    };
+    .con result_cont_2 = {
+        .con result_cont_3 [r:.Nat] = {
+            .let i = r;
+            .let result_row_ptr_3 = %mem.lea (1:.Nat, [I32], 0:.Nat) (result_row_ptr, i:.Idx 1);
+            .let result_row = %mem.slot (I32, 0:.Nat) (mem, 0:.Nat) result_cont_4
+        };
+        .con result_cont_4 [r:
+
+
+        %mem.Ptr (I32, 0:.Nat)] = {
+            .let j = 0:.Nat;
+            .let result_cell_ptr = %mem.lea (1:.Nat, [I32], 0:.Nat) (result_row, j:.Idx 1);
+            .con result_cont_5 [r:I32] = {
+                .let sum = r;
+                .let j = j + 1:.Nat;
+                .let result_cell_ptr = %mem.lea (1:.Nat, [I32], 0:.Nat) (result_row, j:.Idx 1);
+                %mem.store (I32, 0:.Nat) (mem, result_cell_ptr, sum) result_cont_6
+            };
+            .con result_cont_6 = {
+                .let k = 0:.Nat;
+                .let A_row_ptr = %mem.lea (1:.Nat, [%mem.Ptr (I32, 0:.Nat)], 0:.Nat) (A, i:.Idx 1);
+                .let A_row = %mem.slot (%mem.Ptr (I32, 0:.Nat), 0:.Nat) (mem, 0:.Nat) result_cont_7
+            };
+            .con result_cont_7 [r:%mem.Ptr (I32, 0:.Nat)] = {
+                .let A_row_ptr_2 = r;
+                .let A_cell_ptr = %mem.lea (1:.Nat, [I32], 0:.Nat) (A_row_ptr_2, k:.Idx 1);
+                %mem.load (I32, 0:.Nat) (mem, A_cell_ptr) result_cont_8
+            };
+            .con result_cont_8 [r:I32] = {
+                .let A_cell = r;
+                .let B_col_ptr = %mem.lea (1:.Nat, [%mem.Ptr (I32, 0:.Nat)], 0:.Nat) (B, j:.Idx 1);
+                .let B_col = %mem.slot (%mem.Ptr (I32, 0:.Nat), 0:.Nat) (mem, 0:.Nat) result_cont_9
+            };
+            .con result_cont_9 [r:%mem.Ptr (I32, 0:.Nat)] = {
+                .let B_col_ptr_2 = r;
+                .let B_cell_ptr = %mem.lea (1:.Nat, [I32], 0:.Nat) (B_col_ptr_2, k:.Idx 1);
+                %mem.load (I32, 0:.Nat) (mem, B_cell_ptr) result_cont_10
+            };
+            .con result_cont_10 [r:I32] = {
+                .let B_cell = r;
+                .let product = %core.wrap.mul _32 0 (A_cell, B_cell);
+                .let sum = %core.wrap.add _32 0 (sum, product);
+                .let k = k + 1:
+
+
+
+                .Nat;
+                .let cmp = %core.icmp.s _32 (k,cols_A);
+                ((result_cont_7, result_cont_5)#cmp) (sum)
+            };
+            .let i = i + 1:.Nat;
+            .let cmp = %core.icmp.s _32 (i,rows_A);
+            ((result_cont_3, ret_cont)#cmp) (result)
+        };
+        .let i = 0:.Nat;
+        result_cont_3 (i)
+    };
+    %mem.load (I32, 0:.Nat) (mem, A) rows_A_cont
+};

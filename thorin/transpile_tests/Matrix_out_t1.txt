@@ -1,0 +1,32 @@
+.con .extern multiply_matrices ((A B: .List .List .Nat), ret: .Cn .List .List .Nat) = {
+    .let rows_A = %mem.length A;
+    .let cols_A = %mem.length (A[0]);
+    .let rows_B = %mem.length B;
+    .let cols_B = %mem.length (B[0]);
+
+    .con result_cont [v: .List .List .Nat] = ret v;
+
+    .con result_init [i: .Nat] = {
+        .con row_init [j: .Nat] = {
+            result_cont ((result, i, j, 0:.Nat))
+        };
+        .let row = %mem.replicate row_init cols_B;
+        result_cont ((result, i, row))
+    };
+    .let result = %mem.replicate result_init rows_A;
+
+    .con rows_A_cont [i: .Nat] = {
+        .con cols_B_cont [j: .Nat] = {
+            .con sum_cont [sum: .Nat] = {
+                .con cols_A_cont [k: .Nat] = {
+                    .let sum_1 = %core.wrap.add .Nat 0 (sum, %core.wrap.mul .Nat 0 (A[i][k], B[k][j]));
+                    result_cont ((result, i, j, sum_1))
+                };
+                %mem.iterate cols_A_cont 0 cols_A
+            };
+            result_cont ((result, i, j, 0:.Nat, sum_cont))
+        };
+        %mem.iterate cols_B_cont 0 cols_B
+    };
+    %mem.iterate rows_A_cont 0 rows_A
+};

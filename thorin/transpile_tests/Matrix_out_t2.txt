@@ -1,0 +1,40 @@
+.con .extern multiply_matrices ((A: %mem.Ptr (%mem.Ptr (I32, 0:.Nat), 0:.Nat), B: %mem.Ptr (%mem.Ptr (I32, 0:.Nat), 0:.Nat)), ret: .Cn (%mem.M, %mem.Ptr (%mem.Ptr (I32, 0:.Nat), 0:.Nat))) = {
+    .let rows_A = %core.wrap.len _64 0 A;
+    .let cols_A = %core.wrap.len _64 0 (A#0);
+    .let rows_B = %core.wrap.len _64 0 B;
+    .let cols_B = %core.wrap.len _64 0 (B#0);
+
+    .con result_init_row [] = {
+        .let result_row = %mem.new (I32, cols_B);
+        .let result_row_init = %mem.set (I32, result_row, 0:I32);
+        result_row_init
+    };
+    .let result = %mem.new (%mem.Ptr (I32, 0:.Nat), rows_A);
+    .let result_init = %mem.set (%mem.Ptr (I32, 0:.Nat), result, result_init_row);
+
+    .con iter_i_cont [i:I64] = {
+        .con iter_j_cont [j:I64] = {
+            .con iter_k_cont [k:I64, sum:I32] = {
+                .let a = %mem.get (I32, A#i#k);
+                .let b = %mem.get (I32, B#k#j);
+                .let mul = %core.wrap.mul _32 0 (a,b);
+                .let sum_ = %core.wrap.add _32 0 (sum,mul);
+                .let k_ = %core.wrap.add _64 0 (k,1:I64);
+                .let cmp = %core.icmp.s lt _64 (k_,cols_A);
+                ((iter_k_cont (k_,sum_), iter_j_cont)#cmp) ()
+            };
+            .con iter_k [] = iter_k_cont (0:I64, 0:I32);
+            iter_k ()
+        };
+        .con iter_j [] = iter_j_cont (0:I64);
+        iter_j ()
+    };
+    .con iter_i [] = iter_i_cont (0:I64);
+    iter_i ();
+
+    .con assign_cont [i:I64, j:I64] = {
+        .let result_cell = %mem.get (%mem.Ptr (I32, 0:.Nat), result#i#j);
+        .let result_cell_set = %mem.set (I32, result_cell, sum);
+        .let j_ = %core.wrap.add _64 0 (j,1:I64);
+        .let cmp_j = %core.icmp.s lt _64 (j_,cols_B);
+        .con assign_cont_j [i:
