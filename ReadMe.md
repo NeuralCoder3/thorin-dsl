@@ -81,6 +81,16 @@ foo = thorin(thorin_foo()) # resolved to thorin_execute(thorin_foo())
 print(foo(5))
 ```
 
+There are frameworks available that compile / transpile nearly complete python programs:
+* [numba](https://numba.pydata.org/) for JIT compilation python to LLVM
+* [JAX](https://jax.readthedocs.io/en/latest/notebooks/quickstart.html) for autograd, JIT compilation, python to XLA
+* [AutoGrad](https://github.com/HIPS/autograd) (replaced by JAX) automatic differentiation, writes a log trace during execution (DAG)
+* [Pythran](https://pythran.readthedocs.io/en/latest/) for compilation python to C++ 
+
+On a related note, the python bytecode and interpreter is not as complicated as one might think:
+* [Byterun](https://www.aosabook.org/en/500L/a-python-interpreter-written-in-python.html#fn1) a python interpreter written in python
+    * [Github](https://github.com/nedbat/byterun)
+
 ## Concepts
 
 We will present multiple non-exclusive approaches to implement a DSL.
