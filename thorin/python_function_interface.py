@@ -2,10 +2,25 @@ from ctypes import *
 import tempfile
 import os
 
+common_thorin = """
+.import core;
+.import mem;
+
+.let _32 = 4294967296;
+.let I32 = .Idx _32;
+"""
+
 
 def type_text(t):
     if t == c_int:
         return "int"
+    else:
+        raise Exception(f"Unknown type: {t}")
+
+
+def thorin_type_text(t):
+    if t == c_int:
+        return "I32"
     else:
         raise Exception(f"Unknown type: {t}")
 
@@ -19,12 +34,14 @@ def prepare_function(functions):
     wrappers = {}
     c_func_ty = {}
     c_func_ptr = {}
+    thorin_functions = []
     for f, return_type, args in functions:
         name = f.__name__
         # result = f_type.restype
         # print(return_type)
         return_name = type_text(return_type)
         arg_names = [type_text(t) for t in args]
+        arg_names_thorin = [thorin_type_text(t) for t in args]
         type_def = f"typedef {return_name} (*{name}_type)({', '.join(arg_names)});"
         ptr = f"{name}_type g_{name};"
         arguments = [f"x{i}" for i in range(len(args))]
@@ -34,7 +51,7 @@ def prepare_function(functions):
 {return_name} {name}({', '.join(typed_arguments)}) {{
     return g_{name}({', '.join(arguments)});
 }}
-      """.strip()
+        """.strip()
 
         fun_list.append(f)
 
@@ -45,6 +62,9 @@ def prepare_function(functions):
 
         c_func_ty[f] = CFUNCTYPE(return_type, *args)
         c_func_ptr[f] = c_func_ty[f](f)
+
+        thorin_functions.append(
+            f".con {name} [%mem.M, {', '.join(arg_names_thorin)}, .Cn [%mem.M, {thorin_type_text(return_type)}]];")
 
     init_code = "void init("
     init_code += ', '.join([f"{fun_names[f]}_type {fun_names[f]}_" for f,
@@ -67,10 +87,13 @@ def prepare_function(functions):
 
     init_arguments = [c_func_ptr[f] for f, _, _ in functions]
 
-    return interface, init_arguments
+    thorin_interface = common_thorin+"\n\n"
+    thorin_interface += "\n".join(thorin_functions)+"\n\n"
+
+    return interface, thorin_interface, init_arguments
 
 
-def compile(c_interface_code, thorin_code, functions, thorin_path="./thorin"):
+def compile(c_interface_code, thorin_code, functions, thorin_path="./thorin", verbose=False):
     temp_c_code = tempfile.mktemp(".c")
     temp_thorin_code = tempfile.mktemp(".thorin")
     temp_so = tempfile.mktemp(".so")
@@ -82,8 +105,12 @@ def compile(c_interface_code, thorin_code, functions, thorin_path="./thorin"):
     with open(temp_thorin_code, "w") as f:
         f.write(thorin_code)
 
+    if verbose:
+        print("Compiling with thorin...")
     os.system(f"{thorin_path} --output-ll {temp_ll} {temp_thorin_code}")
     # compile with c interface to so
+    if verbose:
+        print("Compiling result with clang...")
     os.system(
         f"clang -fPIC -shared -o {temp_so} {temp_c_code} {temp_ll} -Wno-override-module")
     # os.system("cc -fPIC -shared -o %s %s" % (temp_so, temp_code))
