@@ -1,4 +1,6 @@
 from ctypes import *
+import tempfile
+import os
 
 
 def type_text(t):
@@ -68,13 +70,28 @@ def prepare_function(functions):
     return interface, init_arguments
 
 
-def bar(x):
-    return x + 35
+def compile(code, functions):
+    temp_code = tempfile.mktemp(".c")
+    temp_so = tempfile.mktemp(".so")
+
+    with open(temp_code, "w") as f:
+        f.write(code)
+
+    os.system("cc -fPIC -shared -o %s %s" % (temp_so, temp_code))
+
+    lib = CDLL(temp_so)
+    lib.init(*functions)
+
+    return lib
 
 
-functions = [
-    (bar, c_int, [c_int]),
-]
+if __name__ == "__main__":
+    def bar(x):
+        return x + 35
 
-interface, init_arguments = prepare_function(functions)
-print(interface)
+    functions = [
+        (bar, c_int, [c_int]),
+    ]
+
+    interface, init_arguments = prepare_function(functions)
+    print(interface)
