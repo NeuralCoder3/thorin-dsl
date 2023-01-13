@@ -70,14 +70,23 @@ def prepare_function(functions):
     return interface, init_arguments
 
 
-def compile(code, functions):
-    temp_code = tempfile.mktemp(".c")
+def compile(c_interface_code, thorin_code, functions, thorin_path="./thorin"):
+    temp_c_code = tempfile.mktemp(".c")
+    temp_thorin_code = tempfile.mktemp(".thorin")
     temp_so = tempfile.mktemp(".so")
+    temp_ll = tempfile.mktemp(".ll")
 
-    with open(temp_code, "w") as f:
-        f.write(code)
+    with open(temp_c_code, "w") as f:
+        f.write(c_interface_code)
 
-    os.system("cc -fPIC -shared -o %s %s" % (temp_so, temp_code))
+    with open(temp_thorin_code, "w") as f:
+        f.write(thorin_code)
+
+    os.system(f"{thorin_path} --output-ll {temp_ll} {temp_thorin_code}")
+    # compile with c interface to so
+    os.system(
+        f"clang -fPIC -shared -o {temp_so} {temp_c_code} {temp_ll} -Wno-override-module")
+    # os.system("cc -fPIC -shared -o %s %s" % (temp_so, temp_code))
 
     lib = CDLL(temp_so)
     lib.init(*functions)
