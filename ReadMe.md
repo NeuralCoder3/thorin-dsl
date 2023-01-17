@@ -102,10 +102,22 @@ Thorin acts as an intermediate representation for the high-level language.
 
 Examples of high-level languages are:
 * Impala
+    * Future: Impala2
 * Artic
-* Future: Impala2
-* possibly Future: Rust (via MIR)
-* possibly Future: Idris (dependent types)
+* Other languages (mostly dependently types)
+    * Rust (popular, similar to Impala, has Layers)
+    * Haskell (popular, small core)
+    * Idris (like haskell, dependent)
+        * [Backend Guide](https://idris2.readthedocs.io/en/latest/backends/backend-cookbook.html) [Small Example](https://idris2.readthedocs.io/en/latest/backends/backend-cookbook.html)
+        * [Idris2Grin](https://github.com/Z-snails/Idris2-Grin)
+        * [Idris2OCaml](https://github.com/karroffel/Idris2-Ocaml)
+        * [Other](https://github.com/search?q=idris2+backend)
+    * GRIN (Graph IR, has Haskell, Idris, Agda frontend) [Github](https://github.com/grin-compiler/grin) [Paper](https://nbviewer.org/github/grin-compiler/grin/blob/master/papers/boquist.pdf#page=41)
+    * KIND (Has two simple backends, dependent) [Github](https://github.com/Kindelia/Kind)
+        * [FormCoreJS](https://github.com/moonad/FormCoreJS) (small core, small backend)
+    * Formality (simple backends) [Github](https://github.com/VictorTaelin/Formality) 
+        * [FormCoreJS](https://github.com/moonad/FormCoreJS) (small core, small backend)
+    * HVM (Higher Order VM, targeted by KIND) [Github](https://github.com/Kindelia/HVM)
 
 Advantage:
 * No interface needed
